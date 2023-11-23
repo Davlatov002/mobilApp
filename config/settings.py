@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-u2h=qgh-t$xy68j5z36nn7+kvup@2&q1y_3k0!d*4&tr-@)$ie
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", '127.0.1']
+ALLOWED_HOSTS = ["Mobileapp.com", 'ns1.linode.com', 'ns2.linode.com']
 
 
 # Application definition
