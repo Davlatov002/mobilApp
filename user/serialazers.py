@@ -12,13 +12,17 @@ class ProfilesingupSerialazer(serializers.ModelSerializer):
         fields = ['username', 'email', 'password']
 
 class ProfileRefeleshSerialazer(serializers.Serializer):
-    referal_link = serializers.UUIDField()
+    referal_link = serializers.CharField()
 
 class ProfileLoginserialazer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
 
-
+class VerificationCodeserialazer(serializers.Serializer):
+    code = serializers.CharField()
+    
+class UpdatePasswordSerializer(serializers.Serializer):
+    password = serializers.CharField()
 
 class UpdateProfileserialazer(serializers.ModelSerializer):
     class Meta:
@@ -34,10 +38,5 @@ class UpdateProfileserialazer(serializers.ModelSerializer):
         instance.profile_image = validated_data.get("profile_image", instance.profile_image)
         instance.referal_link = validated_data.get("referal_link", instance.referal_link)
 
-class PrsswProfileserialazer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ['password']
-
-    def update(self, instance, validated_data):
-        instance.password = validated_data.get("password", instance.password)
+class GMProfileserialazer(serializers.Serializer):
+    email = serializers.EmailField()

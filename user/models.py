@@ -1,5 +1,11 @@
 from django.db import models
 import uuid
+import random
+import string
+
+def generate_random_string(length=7):
+    letters_and_digits = string.ascii_letters + string.digits
+    return ''.join(random.choice(letters_and_digits) for _ in range(length))
 
 class Profile(models.Model):
     id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
@@ -9,9 +15,11 @@ class Profile(models.Model):
     name = models.CharField(max_length=200, blank=True, null=True)
     surname = models.CharField(max_length=250, blank=True, null=True)
     profile_image = models.TextField(null=True, blank=True)
-    referal_link = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    referal_link = models.CharField(max_length=8, default=generate_random_string, unique=True, editable=False)
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.0)
-    is_archived = models.DateField(null=True, blank=True)
+    wallet_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    is_verified = models.IntegerField(null=True, blank=True)
+    is_archived = models.IntegerField(null=True, blank=True)
 
     def __str__(self) -> str:
         return self.username
