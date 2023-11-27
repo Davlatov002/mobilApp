@@ -1,11 +1,12 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Profile
+from .models import Profile, Transaction
 from drf_yasg.utils import swagger_auto_schema
-from .serialazers import ProfileSerializer, ProfilesingupSerialazer, ProfileLoginserialazer, UpdateProfileserialazer, ProfileRefeleshSerialazer,VerificationCodeserialazer ,GMProfileserialazer, UpdatePasswordSerializer
+from .serialazers import ProfileSerializer, ProfilesingupSerialazer, ProfileLoginserialazer, UpdateProfileserialazer, ProfileRefeleshSerialazer,VerificationCodeserialazer ,GMProfileserialazer, UpdatePasswordSerializer, Tranzaktionserialazer
 import time
 import random
+from datetime import date
 
 # gmail######
 import smtplib
@@ -251,6 +252,38 @@ def ad_reward(request, pk):
             return Response({'message': -2},status=status.HTTP_400_BAD_REQUEST)    
         profile.balance += 2
         profile.save()
-        return Response({'message': 1},status=status.HTTP_200_OK)
+        username = profile.username
+        taim = date.today()
+        data = {"username":username, "amount":2.00, "created_at":taim}
+        tran = Tranzaktionserialazer(data=data)
+        if tran.is_valid():
+            tran.save()
+        return Response({'message': 1, "transaction":tran.data},status=status.HTTP_200_OK)
+    else:
+        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(methods='GET')
+@api_view(['GET'])
+def get_tr(request):
+    if request.method == 'GET':
+        tr = Transaction.objects.all()
+        serializer = Tranzaktionserialazer(tr, many=True)
+        return Response({'message': 1,"profile":serializer.data}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(methods='GET')
+@api_view(['GET'])
+def daily_balance(request, pk):
+    if request.method == 'GET':
+        dey_sum = 0
+        profile = Profile.objects.get(id=pk)
+        username = profile.username
+        all = [i for i in Transaction.objects.filter(username=username)]
+        for a in all:
+            if a.created_at == date.today():
+                dey_sum += a.amount
+                
+        return Response({'message': 1, 'daily':f"{dey_sum}"}, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)

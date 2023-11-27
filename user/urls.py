@@ -18,4 +18,6 @@ urlpatterns = [
     path('archive-account/<str:pk>/', views.archive_account, name='archive-account'),
     path('send-otp/', views.send_otp, name='send-otp'),
     path('verify-email/<str:pk>/', views.verify_email, name='verify-email'),
+    path('daily_balance/<str:pk>/', views.daily_balance, name='daily_balance'),
+    path('get-TR/', views.get_tr, name='get-TR'),
 ]

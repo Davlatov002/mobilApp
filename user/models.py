@@ -23,3 +23,11 @@ class Profile(models.Model):
 
     def __str__(self) -> str:
         return self.username
+    
+class Transaction(models.Model):
+    username = models.CharField(max_length=200, null=True, blank=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.0)
+    created_at = models.DateField(default=None, blank=True, null=True)
+
+    def __str__(self) -> str:
+        return self.username

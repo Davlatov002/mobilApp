@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Profile
+from .models import Profile, Transaction
 
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,6 +10,11 @@ class ProfilesingupSerialazer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ['username', 'email', 'password']
+
+class Tranzaktionserialazer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = ['username', 'amount', 'created_at']
 
 class ProfileRefeleshSerialazer(serializers.Serializer):
     referal_link = serializers.CharField()
