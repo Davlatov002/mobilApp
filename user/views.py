@@ -6,7 +6,8 @@ from drf_yasg.utils import swagger_auto_schema
 from .serialazers import ProfileSerializer, ProfilesingupSerialazer, ProfileLoginserialazer, UpdateProfileserialazer, ProfileRefeleshSerialazer,VerificationCodeserialazer ,GMProfileserialazer, UpdatePasswordSerializer, Tranzaktionserialazer
 import time
 import random
-from datetime import date
+from datetime import date, timedelta
+
 
 # gmail######
 import smtplib
@@ -86,10 +87,10 @@ def update_password(request, email):
     else:
         return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
 
-@swagger_auto_schema(method='DELETE', operation_description="O'chirmoqchi bo'lgan Profileni ID sini kirting")
-@api_view(['DELETE'])
+@swagger_auto_schema(method='PATCH', operation_description="O'chirmoqchi bo'lgan Profileni ID sini kirting")
+@api_view(['PATCH'])
 def archive_account(request, pk):
-    if request.method == 'DELETE':
+    if request.method == 'PATCH':
         profile = Profile.objects.get(id=pk)
         is_data = int(time.time())
         profile.is_archived = is_data
@@ -196,6 +197,7 @@ def update_profile(request, pk):
             new_username = data.validated_data.get('username')
             new_email = data.validated_data.get('email')
 
+
             # Check if the new username and email are unique
             if Profile.objects.filter(username=new_username).exclude(id=pk).exists():
                 return Response({'message': -4}, status=status.HTTP_400_BAD_REQUEST)
@@ -235,9 +237,21 @@ def activate_referral_link(request, pk):
             return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
         profile = Profile.objects.get(id=pk)
         profile.balance += 5
+        pr_username = profile.username
         profile.save()
+        taim = date.today()
+        data = {"username":pr_username, "amount":5.00, "created_at":taim}
+        tran = Tranzaktionserialazer(data=data)
+        if tran.is_valid():
+            tran.save()
         frend.balance += 5
         frend.save()
+        taim = date.today()
+        fr_username = frend.username
+        data = {"username":fr_username, "amount":5.00, "created_at":taim}
+        tran = Tranzaktionserialazer(data=data)
+        if tran.is_valid():
+            tran.save()
         return Response({'message': 1}, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
@@ -274,16 +288,38 @@ def get_tr(request):
 
 @swagger_auto_schema(methods='GET')
 @api_view(['GET'])
-def daily_balance(request, pk):
+def balance_history(request, pk):
     if request.method == 'GET':
         dey_sum = 0
+        moon_sum = [0] * date.today().day 
+        week_sum = [0] * 7 
         profile = Profile.objects.get(id=pk)
         username = profile.username
-        all = [i for i in Transaction.objects.filter(username=username)]
-        for a in all:
-            if a.created_at == date.today():
-                dey_sum += a.amount
-                
-        return Response({'message': 1, 'daily':f"{dey_sum}"}, status=status.HTTP_200_OK)
+
+        all_transactions = Transaction.objects.filter(username=username)
+
+        # Kunlik tranzaksiyalar
+        for transaction in all_transactions:
+            if transaction.created_at == date.today():
+                dey_sum += transaction.amount
+
+        # haftalik tranzaksiyalar
+        today = date.today()
+        start_of_week = today - timedelta(days=today.weekday())  # Haftaning boshlanishi
+
+        weekly_transactions = all_transactions.filter(created_at__gte=start_of_week)
+
+        for transaction in weekly_transactions:
+            week_sum[(transaction.created_at - start_of_week).days] += transaction.amount
+
+        # Oylik tranzaksiyalar
+        first_day_of_month = date.today().replace(day=1)
+        oylik_transactions = all_transactions.filter(created_at__gte=first_day_of_month)
+
+        for transaction in oylik_transactions:
+            moon_sum[transaction.created_at.day - 1] += transaction.amount
+
+        return Response({'message': 1, 'daily': f"{dey_sum}","weekly":f"{week_sum}", 'monthly': f"{moon_sum}"}, status=status.HTTP_200_OK)
     else:
-        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
+
