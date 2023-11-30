@@ -16,8 +16,13 @@ class Profile(models.Model):
     surname = models.CharField(max_length=250, blank=True, null=True)
     profile_image = models.TextField(null=True, blank=True)
     referal_link = models.CharField(max_length=8, default=generate_random_string, unique=True, editable=False)
-    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.0)
-    wallet_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    balance_usdt = models.FloatField(default=0.0)
+    balance_netbo = models.FloatField(default=0.0)
+    balance_btc = models.FloatField(default=0.0)
+    wallet_id_usdt = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    wallet_id_netbo = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    wallet_id_btc = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    is_identified = models.BooleanField(default=False)
     is_verified = models.IntegerField(null=True, blank=True)
     is_archived = models.IntegerField(null=True, blank=True)
 
@@ -26,7 +31,9 @@ class Profile(models.Model):
     
 class Transaction(models.Model):
     username = models.CharField(max_length=200, null=True, blank=True)
-    amount = models.DecimalField(max_digits=12, decimal_places=2, default=0.0)
+    balance_usdt = models.FloatField(default=0.0)
+    balance_netbo = models.FloatField(default=0.0)
+    balance_btc = models.FloatField(default=0.0)
     created_at = models.DateField(default=None, blank=True, null=True)
 
     def __str__(self) -> str:

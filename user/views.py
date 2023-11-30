@@ -236,19 +236,23 @@ def activate_referral_link(request, pk):
         except:
             return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
         profile = Profile.objects.get(id=pk)
-        profile.balance += 5
+        profile.balance_usdt += 0.05
+        profile.balance_netbo += 0.1
+        profile.balance_btc += 0.000002
         pr_username = profile.username
         profile.save()
         taim = date.today()
-        data = {"username":pr_username, "amount":5.00, "created_at":taim}
+        data = {"username":pr_username, "balance_usdt":0.05,'balance_netbo':0.1,"balance_btc":0.000002, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
-        frend.balance += 5
+        frend.balance_usdt += 0.05
+        frend.balance_netbo += 0.1
+        frend.balance_btc += 0.000002
         frend.save()
         taim = date.today()
         fr_username = frend.username
-        data = {"username":fr_username, "amount":5.00, "created_at":taim}
+        data = {"username":fr_username, "balance_usdt":0.05,'balance_netbo':0.1,"balance_btc":0.000002, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
@@ -264,11 +268,13 @@ def ad_reward(request, pk):
             profile = Profile.objects.get(id=pk)
         except:
             return Response({'message': -2},status=status.HTTP_400_BAD_REQUEST)    
-        profile.balance += 2
+        profile.balance_usdt += 0.015
+        profile.balance_netbo += 0.1
+        profile.balance_btc += 0.000001
         profile.save()
         username = profile.username
         taim = date.today()
-        data = {"username":username, "amount":2.00, "created_at":taim}
+        data = {"username":username, "balance_usdt":0.015,'balance_netbo':0.1,"balance_btc":0.000001, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
@@ -301,7 +307,7 @@ def balance_history(request, pk):
         # Kunlik tranzaksiyalar
         for transaction in all_transactions:
             if transaction.created_at == date.today():
-                dey_sum += transaction.amount
+                dey_sum += transaction.balance_usdt
 
         # haftalik tranzaksiyalar
         today = date.today()
@@ -310,16 +316,16 @@ def balance_history(request, pk):
         weekly_transactions = all_transactions.filter(created_at__gte=start_of_week)
 
         for transaction in weekly_transactions:
-            week_sum[(transaction.created_at - start_of_week).days] += transaction.amount
+            week_sum[(transaction.created_at - start_of_week).days] += transaction.balance_usdt
 
         # Oylik tranzaksiyalar
         first_day_of_month = date.today().replace(day=1)
         oylik_transactions = all_transactions.filter(created_at__gte=first_day_of_month)
 
         for transaction in oylik_transactions:
-            moon_sum[transaction.created_at.day - 1] += transaction.amount
+            moon_sum[transaction.created_at.day - 1] += transaction.balance_usdt
 
-        return Response({'message': 1, 'daily': f"{dey_sum}","weekly":f"{week_sum}", 'monthly': f"{moon_sum}"}, status=status.HTTP_200_OK)
+        return Response({'message': 1, 'daily': dey_sum,"weekly":week_sum, 'monthly': moon_sum}, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
 
