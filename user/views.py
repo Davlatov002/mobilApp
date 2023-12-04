@@ -86,6 +86,39 @@ def update_password(request, email):
         return Response({'message': 1 }, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
+    
+@swagger_auto_schema(method='PATCH', request_body=UpdateProfileserialazer, operation_description="Yangilamaoqchi bo'lgan Profilening ID sini kirting")
+@api_view(['PATCH'])
+def update_profile(request, pk):
+    if request.method == "PATCH":
+        try:
+            profile = Profile.objects.get(id=pk)
+        except Profile.DoesNotExist:
+            return Response({'message': -2,"mass":"p"}, status=status.HTTP_404_NOT_FOUND)      
+        data = UpdateProfileserialazer(data=request.data)
+        if data.is_valid():
+
+            # Profilni o'zgartirishni boshlashdan oldin
+            new_username = data.validated_data.get('username')
+            new_name = data.validated_data.get('name')
+            new_surname = data.validated_data.get('surname')
+            new_image = data.validated_data.get('profile_image')
+            
+            if Profile.objects.filter(username=new_username).exclude(id=pk).exists():
+                return Response({'message': -4}, status=status.HTTP_400_BAD_REQUEST)
+            
+            profile.username=new_username
+            profile.name=new_name
+            profile.surname=new_surname
+            profile.profile_image=new_image
+
+            # Agar muvaffaqiyatli tekshiruvdan o'tsangiz, profildagi ma'lumotlarni yangilang
+            profile.save()
+            return Response({'message': 1,"profile":data.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
 
 @swagger_auto_schema(method='PATCH', operation_description="O'chirmoqchi bo'lgan Profileni ID sini kirting")
 @api_view(['PATCH'])
@@ -122,12 +155,16 @@ def signup(request):
         usernames = [profile.username for profile in profiles]
         username = request.data.get('username')
         email = request.data.get('email')
+        mac_adres = request.data.get('mac_address', None) 
+        adress = [profile.mac_address for profile in profiles if profile.mac_address != None]
         gm = [profile.email for profile in profiles]
         serializer = ProfileSerializer(data=request.data)
         if username in usernames:
             return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
         elif email in gm:
             return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
+        elif mac_adres in adress:
+            return Response({'message': -3}, status=status.HTTP_400_BAD_REQUEST)
         elif serializer.is_valid():
             serializer.save()
             return Response({'message': 1,"profile":serializer.data}, status=status.HTTP_200_OK)
@@ -183,33 +220,6 @@ def login(request):
             else:
                 return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
         return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
-    else:
-        return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
-
-@swagger_auto_schema(method='PATCH', request_body=UpdateProfileserialazer, operation_description="Yangilamaoqchi bo'lgan Profilening ID sini kirting")
-@api_view(['PATCH'])
-def update_profile(request, pk):
-    if request.method == "PATCH":
-        profile = Profile.objects.get(id=pk)        
-        data = ProfileSerializer(instance=profile, data=request.data)
-        if data.is_valid():
-            # Profilni o'zgartirishni boshlashdan oldin
-            new_username = data.validated_data.get('username')
-            new_email = data.validated_data.get('email')
-
-
-            # Check if the new username and email are unique
-            if Profile.objects.filter(username=new_username).exclude(id=pk).exists():
-                return Response({'message': -4}, status=status.HTTP_400_BAD_REQUEST)
-
-            if Profile.objects.filter(email=new_email).exclude(id=pk).exists():
-                return Response({'message': -3}, status=status.HTTP_400_BAD_REQUEST)
-
-            # Agar muvaffaqiyatli tekshiruvdan o'tsangiz, profildagi ma'lumotlarni yangilang
-            data.save()
-            return Response({'message': 1,"profile":data.data}, status=status.HTTP_200_OK)
-        else:
-            return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
     else:
         return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
     

@@ -25,6 +25,7 @@ class Profile(models.Model):
     is_identified = models.BooleanField(default=False)
     is_verified = models.IntegerField(null=True, blank=True)
     is_archived = models.IntegerField(null=True, blank=True)
+    mac_address = models.CharField(max_length = 200, blank=True, null=True)#
 
     def __str__(self) -> str:
         return self.username

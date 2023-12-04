@@ -10,6 +10,7 @@ urlpatterns = [
     path('get-profile-id/<str:pk>/', views.get_profile_id, name='get-profile-id'),
     path('get-profile-username/<str:username>/', views.get_profile_username, name='get-profile-username'),
     path('update-profile/<str:pk>/', views.update_profile, name='update-profile'),
+    # path('update-profile/<str:pk>/', views.update_email_password, name='update-profile'),
     path('delete-profile/<str:pk>/', views.delete_profile, name='delete-profile'),
     path('activate-referral-link/<str:pk>/', views.activate_referral_link, name='activate-referral-link'),
     path('ad-reward/<str:pk>/', views.ad_reward, name='ad-reward'),
