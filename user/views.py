@@ -96,6 +96,7 @@ def update_profile(request, pk):
         except Profile.DoesNotExist:
             return Response({'message': -2,"mass":"p"}, status=status.HTTP_404_NOT_FOUND)      
         data = UpdateProfileserialazer(data=request.data)
+        serialzer = ProfileSerializer(data=profile)
         if data.is_valid():
 
             # Profilni o'zgartirishni boshlashdan oldin
@@ -114,7 +115,7 @@ def update_profile(request, pk):
 
             # Agar muvaffaqiyatli tekshiruvdan o'tsangiz, profildagi ma'lumotlarni yangilang
             profile.save()
-            return Response({'message': 1,"profile":data.data}, status=status.HTTP_200_OK)
+            return Response({'message': 1,"profile":serialzer.data}, status=status.HTTP_200_OK)
         else:
             return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
     else:
@@ -156,7 +157,7 @@ def signup(request):
         username = request.data.get('username')
         email = request.data.get('email')
         mac_adres = request.data.get('mac_address', None) 
-        adress = [profile.mac_address for profile in profiles if profile.mac_address != None]
+        adress = [profile.mac_address for profile in profiles if profile.mac_address != None or profile.mac_address != "null" or profile.mac_address != ""]
         gm = [profile.email for profile in profiles]
         serializer = ProfileSerializer(data=request.data)
         if username in usernames:
