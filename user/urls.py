@@ -10,7 +10,7 @@ urlpatterns = [
     path('get-profile-id/<str:pk>/', views.get_profile_id, name='get-profile-id'),
     path('get-profile-username/<str:username>/', views.get_profile_username, name='get-profile-username'),
     path('update-profile/<str:pk>/', views.update_profile, name='update-profile'),
-    # path('update-profile/<str:pk>/', views.update_email_password, name='update-profile'),
+    path('update-email-password/<str:pk>/', views.update_email_password, name='update-email-password'),
     path('delete-profile/<str:pk>/', views.delete_profile, name='delete-profile'),
     path('activate-referral-link/<str:pk>/', views.activate_referral_link, name='activate-referral-link'),
     path('ad-reward/<str:pk>/', views.ad_reward, name='ad-reward'),
@@ -21,5 +21,10 @@ urlpatterns = [
     path('verify-email/<str:pk>/', views.verify_email, name='verify-email'),
     path('balance-history/<str:pk>/', views.balance_history, name='balance-history'),
     path('get-TR/', views.get_tr, name='get-TR'),
+    path('exchange/<str:pk>/', views.exchange, name='exchange'),
+    path('get-numberofprofiles/', views.get_number_of_profiles, name='get-numberofprofiles'),
+    path('get-money/', views.get_money, name='get-money'),
+    path('get-max-usdt-profile/', views.get_max_usdt_profile, name='gget-max-usdt-profile'),
+    path('get-moneyyyy/', views.get_moneyyyy, name='get-moneyyyy'),
 
 ]

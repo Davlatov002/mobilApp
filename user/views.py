@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Profile, Transaction
 from drf_yasg.utils import swagger_auto_schema
-from .serialazers import ProfileSerializer, ProfilesingupSerialazer, ProfileLoginserialazer, UpdateProfileserialazer, ProfileRefeleshSerialazer,VerificationCodeserialazer ,GMProfileserialazer, UpdatePasswordSerializer, Tranzaktionserialazer
+from .serialazers import ProfileSerializer, ProfilesingupSerialazer, ProfileLoginserialazer, UpdateProfileSerializer, ProfileRefeleshSerialazer,VerificationCodeserialazer ,GMProfileserialazer, UpdatePasswordSerializer, Tranzaktionserialazer, UpdateEmPsSerializer, exchangeserialazers
 import time
 import random
 from datetime import date, timedelta
@@ -87,39 +87,67 @@ def update_password(request, email):
     else:
         return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
     
-@swagger_auto_schema(method='PATCH', request_body=UpdateProfileserialazer, operation_description="Yangilamaoqchi bo'lgan Profilening ID sini kirting")
+@swagger_auto_schema(method='PATCH', request_body=UpdateProfileSerializer, operation_description="Yangilamaoqchi bo'lgan Profilening ID sini kirting")
 @api_view(['PATCH'])
 def update_profile(request, pk):
     if request.method == "PATCH":
         try:
             profile = Profile.objects.get(id=pk)
         except Profile.DoesNotExist:
-            return Response({'message': -2,"mass":"p"}, status=status.HTTP_404_NOT_FOUND)      
-        data = UpdateProfileserialazer(data=request.data)
-        serialzer = ProfileSerializer(data=profile)
-        if data.is_valid():
+            return Response({'message': -1}, status=status.HTTP_404_NOT_FOUND)
 
-            # Profilni o'zgartirishni boshlashdan oldin
+        data = UpdateProfileSerializer(instance=profile, data=request.data)
+        if data.is_valid():
             new_username = data.validated_data.get('username')
-            new_name = data.validated_data.get('name')
-            new_surname = data.validated_data.get('surname')
-            new_image = data.validated_data.get('profile_image')
-            
+
             if Profile.objects.filter(username=new_username).exclude(id=pk).exists():
                 return Response({'message': -4}, status=status.HTTP_400_BAD_REQUEST)
-            
-            profile.username=new_username
-            profile.name=new_name
-            profile.surname=new_surname
-            profile.profile_image=new_image
 
-            # Agar muvaffaqiyatli tekshiruvdan o'tsangiz, profildagi ma'lumotlarni yangilang
-            profile.save()
-            return Response({'message': 1,"profile":serialzer.data}, status=status.HTTP_200_OK)
+            # Update profile fields
+            data.save()
+
+            # Reload the profile instance to get the updated data
+            profile.refresh_from_db()
+
+            # Serialize the updated profile for the response
+            serializer = ProfileSerializer(profile)
+            
+            return Response({'message': 1, "profile": serializer.data}, status=status.HTTP_200_OK)
         else:
             return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
     else:
-        return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'message': -3}, status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(method='PATCH', request_body=UpdateEmPsSerializer, operation_description="Yangilamaoqchi bo'lgan Profilening ID sini kirting")
+@api_view(['PATCH'])
+def update_email_password(request, pk):
+    if request.method == "PATCH":
+        try:
+            profile = Profile.objects.get(id=pk)
+        except Profile.DoesNotExist:
+            return Response({'message': -1}, status=status.HTTP_404_NOT_FOUND)
+
+        data = UpdateEmPsSerializer(instance=profile, data=request.data)
+        if data.is_valid():
+            new_email = data.validated_data.get('email')
+
+            if Profile.objects.filter(email=new_email).exclude(id=pk).exists():
+                return Response({'message': -4}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Update profile fields
+            data.save()
+
+            # Reload the profile instance to get the updated data
+            profile.refresh_from_db()
+
+            # Serialize the updated profile for the response
+            serializer = ProfileSerializer(profile)
+            
+            return Response({'message': 1, "profile": serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'message': -3}, status=status.HTTP_400_BAD_REQUEST)
 
 @swagger_auto_schema(method='PATCH', operation_description="O'chirmoqchi bo'lgan Profileni ID sini kirting")
 @api_view(['PATCH'])
@@ -157,7 +185,7 @@ def signup(request):
         username = request.data.get('username')
         email = request.data.get('email')
         mac_adres = request.data.get('mac_address', None) 
-        adress = [profile.mac_address for profile in profiles if profile.mac_address != None or profile.mac_address != "null" or profile.mac_address != ""]
+        adress = [profile.mac_address for profile in profiles if profile.mac_address is not None and profile.mac_address != "null" and profile.mac_address != ""]
         gm = [profile.email for profile in profiles]
         serializer = ProfileSerializer(data=request.data)
         if username in usernames:
@@ -249,21 +277,19 @@ def activate_referral_link(request, pk):
         profile = Profile.objects.get(id=pk)
         profile.balance_usdt += 0.05
         profile.balance_netbo += 0.1
-        profile.balance_btc += 0.000002
         pr_username = profile.username
         profile.save()
         taim = date.today()
-        data = {"username":pr_username, "balance_usdt":0.05,'balance_netbo':0.1,"balance_btc":0.000002, "created_at":taim}
+        data = {"username":pr_username, "balance_usdt":0.05,'balance_netbo':0.1, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
         frend.balance_usdt += 0.05
         frend.balance_netbo += 0.1
-        frend.balance_btc += 0.000002
         frend.save()
         taim = date.today()
         fr_username = frend.username
-        data = {"username":fr_username, "balance_usdt":0.05,'balance_netbo':0.1,"balance_btc":0.000002, "created_at":taim}
+        data = {"username":fr_username, "balance_usdt":0.05,'balance_netbo':0.1, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
@@ -278,14 +304,17 @@ def ad_reward(request, pk):
         try:
             profile = Profile.objects.get(id=pk)
         except:
-            return Response({'message': -2},status=status.HTTP_400_BAD_REQUEST)    
-        profile.balance_usdt += 0.015
-        profile.balance_netbo += 0.1
-        profile.balance_btc += 0.000001
+            return Response({'message': -2},status=status.HTTP_400_BAD_REQUEST)
+        my_usdt = [0.005, 0.004, 0.003, 0.002, 0.001]
+        my_netbo = [0.1, 0.12, 0.14, 0.15, 0.16]
+        balns_usdt = random.choice(my_usdt) 
+        balns_netbo = random.choice(my_netbo)
+        profile.balance_usdt += balns_usdt
+        profile.balance_netbo += balns_netbo
         profile.save()
         username = profile.username
         taim = date.today()
-        data = {"username":username, "balance_usdt":0.015,'balance_netbo':0.1,"balance_btc":0.000001, "created_at":taim}
+        data = {"username":username, "balance_usdt":balns_usdt,'balance_netbo':balns_netbo, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
@@ -339,4 +368,102 @@ def balance_history(request, pk):
         return Response({'message': 1, 'daily': dey_sum,"weekly":week_sum, 'monthly': moon_sum}, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(method='PATCH',request_body=exchangeserialazers, operation_description="profile ID sini kirting")
+@api_view(['PATCH'])
+def exchange(request, pk):
+    if request.method == 'PATCH':
+        try:
+            profile = Profile.objects.get(id=pk)
+        except:
+            return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)   
+        fromm = request.data.get('fromm')
+        to = request.data.get('to')
+        value = request.data.get('value')
+        balanc_ust = profile.balance_usdt
+        balanc_btc = profile.balance_btc
+        if fromm == "USDT" and to == "NETBO":
+            if value <= balanc_ust:
+                profile.balance_usdt -= value
+                profile.balance_netbo += (23 * value)
+                profile.save()
+                return Response({'message': 1},status=status.HTTP_200_OK)
+            else:
+                return Response({'message': -2},status=status.HTTP_400_BAD_REQUEST)
+        elif fromm == "BTC" and to == "NETBO":
+            if value <= balanc_btc:
+                profile.balance_btc -= value
+                profile.balance_netbo += (240000 * value)
+                profile.save()
+                return Response({'message': 1},status=status.HTTP_200_OK)
+            else:
+                return Response({'message': -2},status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'message': -3},status=status.HTTP_400_BAD_REQUEST)
+    else:
+        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
+    
+
+# 1 USDT= 23 NETBO
+
+# 0.000005 BTC = 1.2 NETBO
+    
+@swagger_auto_schema(methods='GET')
+@api_view(['GET'])
+def get_number_of_profiles(request):
+    if request.method == 'GET':
+        profiles_count = Profile.objects.count()
+        return Response({'message': 1,"profiles":profiles_count}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
+
+@swagger_auto_schema(methods='GET')
+@api_view(['GET'])
+def get_money(request):
+    if request.method == 'GET':
+        usdt = 0.0
+        netbo = 0.0
+        btc = 0.0
+        profile = Profile.objects.all()
+        for i in profile:
+            usdt += i.balance_usdt
+            netbo += i.balance_netbo
+            btc += i.balance_btc
+        return Response({'message': 1,"usdt":usdt, "netbo":netbo, "btc":btc}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
+    
+@swagger_auto_schema(methods='GET')
+@api_view(['GET'])
+def get_max_usdt_profile(request):
+    if request.method == 'GET':
+        max_usdt_profile = None
+        max_usdt_balance = 0.0
+
+        profiles = Profile.objects.all()
+
+        for profile in profiles:
+            if profile.balance_usdt > max_usdt_balance:
+                max_usdt_profile = profile
+                max_usdt_balance = profile.balance_usdt
+        serializer = ProfileSerializer(max_usdt_profile)
+        if max_usdt_profile is not None:
+            return Response({'message': 1, 'profile_id': serializer.data}, status=status.HTTP_200_OK)
+        else:
+            return Response({'message': -2}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
+    
+@swagger_auto_schema(methods='GET')
+@api_view(['GET'])
+def get_moneyyyy(request):
+    if request.method == 'GET':
+        profile = Profile.objects.all()
+        for i in profile:
+            i.balance_netbo += (i.balance_usdt * 23)
+            i.balance_usdt = 0
+            i.save()
+        return Response({'message': 1}, status=status.HTTP_200_OK)
+    else:
+        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
 

@@ -29,24 +29,39 @@ class VerificationCodeserialazer(serializers.Serializer):
 class UpdatePasswordSerializer(serializers.Serializer):
     password = serializers.CharField()
 
-class UpdateProfileserialazer(serializers.Serializer):
-    username=serializers.CharField()
-    name=serializers.CharField()
-    surname=serializers.CharField()
-    profile_image=serializers.CharField()
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['username', 'name', 'surname', 'profile_image']
 
-# class UpdateProfileserialazer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Profile
-#         fields = ['email','password','username','name','surname','profile_image']
+    def update(self, instance, validated_data):
+        # Update each field individually
+        instance.username = validated_data.get('username', instance.username)
+        instance.name = validated_data.get('name', instance.name)
+        instance.surname = validated_data.get('surname', instance.surname)
+        instance.profile_image = validated_data.get('profile_image', instance.profile_image)
+        instance.save()
 
-#     def update(self, instance, validated_data):
-#         instance.email = validated_data.get("email", instance.email)
-#         instance.password = validated_data.get("password", instance.password)
-#         instance.username = validated_data.get("username", instance.username)
-#         instance.name = validated_data.get("name", instance.name)
-#         instance.surname = validated_data.get("surname", instance.surname)
-#         instance.profile_image = validated_data.get("profile_image", instance.profile_image)
+        return instance
+    
+class UpdateEmPsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['email', 'password']
+
+    def update(self, instance, validated_data):
+        # Update each field individually
+        instance.email = validated_data.get('email', instance.email)
+        instance.password = validated_data.get('password', instance.password)
+        instance.save()
+                                                                
+        return instance
 
 class GMProfileserialazer(serializers.Serializer):
     email = serializers.EmailField()
+
+class exchangeserialazers(serializers.Serializer):
+    fromm = serializers.CharField()
+    to = serializers.CharField()
+    value = serializers.FloatField()
+
