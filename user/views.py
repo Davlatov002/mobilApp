@@ -218,7 +218,14 @@ def get_profile_id(request, pk):
     if request.method == 'GET':
         profile = Profile.objects.get(id=pk)
         serializer = ProfileSerializer(profile)
-        return Response({'message': 1,"profile":serializer.data}, status=status.HTTP_200_OK)
+        us = profile.username
+        taim = date.today()
+        s = 0
+        tr = Transaction.objects.filter(username=us)
+        for i in tr:
+            if i.created_at == taim:
+                s += 1
+        return Response({'message': 1,"profile":serializer.data, "ad_count":s}, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
     
@@ -228,7 +235,14 @@ def get_profile_username(request, username):
     if request.method == 'GET':
         profile = Profile.objects.get(username=username)
         serializer = ProfileSerializer(profile)
-        return Response({'message': 1,"profile":serializer.data}, status=status.HTTP_200_OK)
+        us = profile.username
+        taim = date.today()
+        s = 0
+        tr = Transaction.objects.filter(username=us)
+        for i in tr:
+            if i.created_at == taim:
+                s += 1
+        return Response({'message': 1,"profile":serializer.data, "ad_count":s}, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
     
@@ -275,21 +289,19 @@ def activate_referral_link(request, pk):
         except:
             return Response({'message': -2}, status=status.HTTP_400_BAD_REQUEST)
         profile = Profile.objects.get(id=pk)
-        profile.balance_usdt += 0.05
-        profile.balance_netbo += 0.1
+        profile.balance_netbo += 4
         pr_username = profile.username
         profile.save()
         taim = date.today()
-        data = {"username":pr_username, "balance_usdt":0.05,'balance_netbo':0.1, "created_at":taim}
+        data = {"username":pr_username,'balance_netbo':4,'balance_netbo':0,'balance_btc':0, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
-        frend.balance_usdt += 0.05
-        frend.balance_netbo += 0.1
+        frend.balance_netbo += 4
         frend.save()
         taim = date.today()
         fr_username = frend.username
-        data = {"username":fr_username, "balance_usdt":0.05,'balance_netbo':0.1, "created_at":taim}
+        data = {"username":fr_username,'balance_netbo':4,'balance_netbo':0,'balance_btc':0, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
@@ -305,20 +317,34 @@ def ad_reward(request, pk):
             profile = Profile.objects.get(id=pk)
         except:
             return Response({'message': -2},status=status.HTTP_400_BAD_REQUEST)
-        my_usdt = [0.005, 0.004, 0.003, 0.002, 0.001]
-        my_netbo = [0.1, 0.12, 0.14, 0.15, 0.16]
-        balns_usdt = random.choice(my_usdt) 
-        balns_netbo = random.choice(my_netbo)
-        profile.balance_usdt += balns_usdt
-        profile.balance_netbo += balns_netbo
-        profile.save()
-        username = profile.username
+        us = profile.username
         taim = date.today()
-        data = {"username":username, "balance_usdt":balns_usdt,'balance_netbo':balns_netbo, "created_at":taim}
+        s = 0
+        tr = Transaction.objects.filter(username=us)
+        for i in tr:
+            if i.created_at == taim:
+                s += 1
+        if s < 20:
+            a = 1
+            profile.balance_usdt += a
+            profile.save()
+        elif s < 50:
+            a = 1.2
+            profile.balance_usdt += a
+            profile.save()
+        elif s < 100:
+            a = 1.5
+            profile.balance_usdt += a
+            profile.save()
+        else:
+            a = 1.8
+            profile.balance_usdt += a
+            profile.save()
+        data = {"username":us, "balance_usdt":a,'balance_netbo':0,'balance_btc':0, "created_at":taim}
         tran = Tranzaktionserialazer(data=data)
         if tran.is_valid():
             tran.save()
-        return Response({'message': 1, "transaction":tran.data},status=status.HTTP_200_OK)
+        return Response({'message': 1, "transaction":tran.data, 'tr':s},status=status.HTTP_200_OK)
     else:
         return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
 
@@ -423,13 +449,12 @@ def get_money(request):
     if request.method == 'GET':
         usdt = 0.0
         netbo = 0.0
-        btc = 0.0
         profile = Profile.objects.all()
         for i in profile:
             usdt += i.balance_usdt
             netbo += i.balance_netbo
             btc += i.balance_btc
-        return Response({'message': 1,"usdt":usdt, "netbo":netbo, "btc":btc}, status=status.HTTP_200_OK)
+        return Response({'message': 1,"usdt":usdt, "netbo":netbo}, status=status.HTTP_200_OK)
     else:
         return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
     
@@ -454,16 +479,4 @@ def get_max_usdt_profile(request):
     else:
         return Response({'message': -1}, status=status.HTTP_400_BAD_REQUEST)
     
-@swagger_auto_schema(methods='GET')
-@api_view(['GET'])
-def get_moneyyyy(request):
-    if request.method == 'GET':
-        profile = Profile.objects.all()
-        for i in profile:
-            i.balance_netbo += (i.balance_usdt * 23)
-            i.balance_usdt = 0
-            i.save()
-        return Response({'message': 1}, status=status.HTTP_200_OK)
-    else:
-        return Response({'message': -1},status=status.HTTP_400_BAD_REQUEST)
 

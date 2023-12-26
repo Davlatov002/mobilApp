@@ -25,6 +25,5 @@ urlpatterns = [
     path('get-numberofprofiles/', views.get_number_of_profiles, name='get-numberofprofiles'),
     path('get-money/', views.get_money, name='get-money'),
     path('get-max-usdt-profile/', views.get_max_usdt_profile, name='gget-max-usdt-profile'),
-    path('get-moneyyyy/', views.get_moneyyyy, name='get-moneyyyy'),
 
 ]
